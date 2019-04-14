@@ -11,6 +11,9 @@ import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from sklearn.cluster import DBSCAN
 
+from scipy.cluster.hierarchy import dendrogram, linkage
+import pylab
+
 class ClusteringAnalysis(object):
     def __init__(self, data=None, true_labels=None):
         self.data = data
@@ -48,6 +51,25 @@ class ClusteringAnalysis(object):
             'data': data
         }
         return fit_res
+
+
+    def plot_dendrogram(self,data):
+        Z = linkage(data, 'average')
+        fig = plt.figure(figsize=(25, 10))
+        labelsize = 20
+        ticksize = 15
+        plt.title('Hierarchical Clustering Dendrogram', fontsize=labelsize)
+        plt.xlabel('stock', fontsize=labelsize)
+        plt.ylabel('distance', fontsize=labelsize)
+        dendrogram(
+            Z,
+            leaf_rotation=90.,  # rotates the x axis labels
+            leaf_font_size=8.,  # font size for the x axis labels
+            labels=data.index
+        )
+        pylab.yticks(fontsize=ticksize)
+        pylab.xticks(rotation=-90, fontsize=ticksize)
+        return fig
 
     def plot_scatter_kmeans(self, X, paramtype, params, feature_pair, n_clusters=3):
 
