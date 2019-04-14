@@ -9,7 +9,7 @@ from sklearn.metrics.pairwise import pairwise_distances_argmin
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
-
+from sklearn.cluster import DBSCAN
 
 class ClusteringAnalysis(object):
     def __init__(self, data=None, true_labels=None):
@@ -34,6 +34,19 @@ class ClusteringAnalysis(object):
                    'cluster_labels': cluster_labels,
                    'cluster_centers': cluster_centers,
                    'data': data}
+        return fit_res
+
+
+    def model_DBSCAN(self,data,epsilon=None,min_pts=None):
+        epsilon = 0.3 if epsilon is None else epsilon
+        min_pts = data.shape[1] if min_pts is None else min_pts
+        db = DBSCAN(eps=epsilon,min_samples=min_pts).fit(data)
+        fit_res = {
+            'cluster_method': 'DBSCAN',
+            'model':'db',
+            'cluster_labels': db.labels_,
+            'data': data
+        }
         return fit_res
 
     def plot_scatter_kmeans(self, X, paramtype, params, feature_pair, n_clusters=3):
@@ -96,6 +109,7 @@ class ClusteringAnalysis(object):
                 ax.set_ylabel(feature_pair[1])
             fig.tight_layout()
         return fig
+
 
     def metric_silhouette_width(self, X, cluster_labels):
         silhouette_avg = metrics.silhouette_score(X, cluster_labels)
