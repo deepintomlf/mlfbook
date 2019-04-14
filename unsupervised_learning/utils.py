@@ -8,7 +8,7 @@ def data_scaler(data,scaler_type):
     elif scaler_type == 'minmax':
         transformed_data = MinMaxScaler().fit_transform(data)
     elif scaler_type == 'normalize':
-        transformed_data = Normalizer.fit_transform(data)
+        transformed_data = Normalizer().fit_transform(data)
     else:
         transformed_data = None
     return transformed_data
