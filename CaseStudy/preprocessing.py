@@ -3,6 +3,8 @@ import numpy as np
 import gc
 import os
 from functools import lru_cache
+from sklearn.preprocessing import MinMaxScaler, Imputer
+
 
 
 @lru_cache(maxsize=None)
@@ -211,4 +213,32 @@ def build_model_input(df=None,input_dir=None, num_rows=None):
     ids = tr['SK_ID_CURR']
     y = tr['TARGET']
     tr = tr[feats]
+    return tr, te, y, ids
+
+
+def build_model_input_extended(df=None,input_dir=None, num_rows=None):
+    print("Process application train and test...")
+    if df is None:
+        print('load feature selection ...')
+        df = feature_selection(input_dir, num_rows)
+    else:
+        print('load data given ...')
+    feats = [f for f in df.columns if f not in ['TARGET','SK_ID_CURR','SK_ID_BUREAU','SK_ID_PREV','index']]
+    y = df['TARGET']
+    X = df[feats]
+    X = X.fillna(X.mean()).clip(-1e11, 1e11)
+    scaler = MinMaxScaler()
+    scaler.fit(X)
+    training = y.notnull()
+    testing = y.isnull()
+    tr = scaler.transform(X[training])
+    te = scaler.transform(X[testing])
+
+    tr = pd.DataFrame(tr, columns=X[training].columns)
+    te = pd.DataFrame(te, columns=X[training].columns)
+
+    y = y[training]
+    te['SK_ID_CURR'] = df[testing]['SK_ID_CURR']
+    te['TARGET'] = df[testing]['TARGET']
+    ids = df[training]['SK_ID_CURR']
     return tr, te, y, ids
