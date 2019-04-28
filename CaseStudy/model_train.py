@@ -184,6 +184,10 @@ def train_model_neuralnetwork(data_, test_, y_, ids, folds_,algo_params, fit_par
     }
     return res
 
+
+############################ Train:  Models + StratifiedKFold ###############################
+
+
 def train_results(data, test, y, ids,train_model,sel_feas=None,skfold_params=_default_skfold_params):
     if sel_feas is None:
         sel_feas = data.columns
