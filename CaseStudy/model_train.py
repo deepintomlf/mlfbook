@@ -35,7 +35,6 @@ def train_model_lgbm(data_, test_, y_, ids, folds_, algo_params, fit_params):
         trn_x, trn_y = data_[feats].iloc[trn_idx], y_.iloc[trn_idx]
         val_x, val_y = data_[feats].iloc[val_idx], y_.iloc[val_idx]
         clf = lgb.LGBMClassifier(**algo_params)
-        # LightGBM parameters found by Bayesian optimization
         fit_params.update({"eval_set": [(trn_x, trn_y), (val_x, val_y)]})
         clf.fit(trn_x, trn_y, **fit_params)
         oof_best_iters.append(clf.best_iteration_)
