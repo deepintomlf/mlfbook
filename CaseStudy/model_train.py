@@ -34,12 +34,14 @@ def train_model_lgbm(data_, test_, y_, ids, folds_, algo_params, fit_params):
     for n_fold, (trn_idx, val_idx) in enumerate(folds_.split(data_, y_)):
         trn_x, trn_y = data_[feats].iloc[trn_idx], y_.iloc[trn_idx]
         val_x, val_y = data_[feats].iloc[val_idx], y_.iloc[val_idx]
+
         clf = lgb.LGBMClassifier(**algo_params)
+
         fit_params.update({"eval_set": [(trn_x, trn_y), (val_x, val_y)]})
         clf.fit(trn_x, trn_y, **fit_params)
+
         oof_best_iters.append(clf.best_iteration_)
         oof_preds[val_idx] = clf.predict_proba(val_x, num_iteration=clf.best_iteration_)[:, 1]
-
         sub_preds += clf.predict_proba(
             test_[feats],
             num_iteration=clf.best_iteration_)[:, 1] / folds_.n_splits
