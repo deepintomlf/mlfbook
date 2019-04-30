@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics import roc_auc_score, precision_recall_curve, roc_curve, average_precision_score
 from datetime import datetime
+from sklearn.model_selection import GridSearchCV
+
 
 def save_figure(fig,fdir,fname,fid=str(datetime.now().strftime('%Y%m%d%H%M')),fformat='png'):
     fig.savefig(f'{fdir}/{fname}_{fid}.{fformat}')
@@ -122,3 +124,12 @@ def display_precision_recall(y_, oof_preds_, folds_idx_, model_type='',save_dir=
         save_figure(fig,save_dir,'recall_precision_curve')
     return fig
 
+
+def grid_search_cv(x_train,y_train,estimator,param_grid,cv=5, res_params_only=False):
+    grid = GridSearchCV(estimator, param_grid, cv=cv)
+    grid.fit(x_train, y_train)
+    if res_params_only:
+        res = grid.best_params_
+    else:
+        res = grid
+    return res
