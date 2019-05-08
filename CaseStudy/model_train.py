@@ -15,6 +15,7 @@ from keras.layers import Dropout, BatchNormalization
 from keras.layers.advanced_activations import PReLU
 from keras.optimizers import Adam
 from functools import lru_cache
+import copy
 
 
 
@@ -79,8 +80,7 @@ def train_model_lgbm(data_, test_, y_, ids, folds_, algo_params, fit_params):
         'fit_params':fit_params
     }
     return res
-    # return oof_preds, df_oof_preds, test_[['SK_ID_CURR', 'TARGET'
-    #                                        ]], feature_importance_df, roc_auc_score(y_, oof_preds), avg_best_iters
+
 
 def train_model_logistic(data_, test_, y_, ids, folds_, algo_params, fit_params):
     oof_preds = np.zeros(data_.shape[0])
@@ -126,6 +126,8 @@ def train_model_logistic(data_, test_, y_, ids, folds_, algo_params, fit_params)
         'fit_params':fit_params
     }
     return res
+
+
 
 def train_model_neuralnetwork(data_, test_, y_, ids, folds_,algo_params, fit_params):
     oof_preds = np.zeros(data_.shape[0])
@@ -214,3 +216,21 @@ def save_training_results(res,model_type,save_dir='.'):
     figs.append(display_roc_curve(y_=res['y'], oof_preds_=res['oof_preds'], folds_idx_=res['folds_idx'],model_type=model_type,save_dir=save_dir))
     figs.append(display_precision_recall(y_=res['y'], oof_preds_=res['oof_preds'], folds_idx_=res['folds_idx'],model_type=model_type,save_dir=save_dir))
     return figs
+
+def save_training_prediction_result(res, model_type):
+    # save csv
+    sub_file = 'submission_{m}_5x_{s}_{id}.csv'.format(m=model_type, s=res['score'], id=_default_file_id_m)
+    oof_file = 'train_{m}_5x_oof_{s}_{id}.csv'.format(m=model_type, s=res['score'], id=_default_file_id_m)
+    res['test_preds'].to_csv(sub_file, index=False)
+    res['df_oof_preds'].to_csv(oof_file, index=False)
+
+
+def save_feature_importance(df_feature_importance, res, model_type):
+    # save figure
+    figs = []
+    #if 'importances' in res.keys():
+    figs.append(display_importances(feature_importance_df_=df_feature_importance,model_type=model_type))
+    figs.append(display_roc_curve(y_=res['y'], oof_preds_=res['oof_preds'], folds_idx_=res['folds_idx'],model_type=model_type))
+    figs.append(display_precision_recall(y_=res['y'], oof_preds_=res['oof_preds'], folds_idx_=res['folds_idx'],model_type=model_type))
+    return figs
+
