@@ -150,7 +150,7 @@ def train_model_neuralnetwork(data_, test_, y_, ids, folds_,algo_params, fit_par
             nn.add(BatchNormalization())
             nn.add(Dropout(algo_params['dropout']))
         nn.add(Dense(1, kernel_initializer=algo_params['kernel_initializer'], activation=algo_params['activation']))
-        nn.compile(loss=algo_params['loss'], optimizer=algo_params['optimizer'])
+        #nn.compile(loss=algo_params['loss'], optimizer=algo_params['optimizer'])
         nn.compile(loss=algo_params['loss'], optimizer=algo_params['optimizer'], metrics=algo_params['metric'])
 
         print('Fitting neural network...')
