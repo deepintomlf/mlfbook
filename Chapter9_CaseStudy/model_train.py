@@ -10,45 +10,91 @@ from keras import regularizers
 from keras.callbacks import EarlyStopping
 from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
-from keras.layers import Dense
-from keras.layers import Dropout, BatchNormalization
+from keras.layers import Dense, Dropout, BatchNormalization
 from keras.layers.advanced_activations import PReLU
 from keras.optimizers import Adam
 from functools import lru_cache
 import copy
 
 
-
+#from default_parameters_config import _default_skfold_params
 _default_skfold_params = {'n_splits':5, 'shuffle':True, 'random_state':1001}
 _default_file_id_m = str(datetime.now().strftime('%Y%m%d%H%M'))
 
 
 ############################ Train Models: LGBM,LogisticReg,NeuralNetwork ###############################
 
-def train_model_lgbm(data_, test_, y_, ids, folds_, algo_params, fit_params):
-    oof_preds = np.zeros(data_.shape[0])
-    sub_preds = np.zeros(test_.shape[0])
-    feature_importance_df = pd.DataFrame()
+def train_model_lgbm_v2(x_train, y_train, ids, folds_, algo_params, fit_params):
+    """
+    functionality: 
+    input:  the train set, folds, algo parameters and fit parameters as the input
+    output: k-fold models and other 
+    """
+    oof_preds = np.zeros(x_train.shape[0])
     oof_best_iters = []
-    feats = [f for f in data_.columns if f not in ['SK_ID_CURR']]
-
-    for n_fold, (trn_idx, val_idx) in enumerate(folds_.split(data_, y_)):
-        trn_x, trn_y = data_[feats].iloc[trn_idx], y_.iloc[trn_idx]
-        val_x, val_y = data_[feats].iloc[val_idx], y_.iloc[val_idx]
-
+    #feats = [f for f in data_.columns if f not in ['SK_ID_CURR']]
+    oof_models = []
+    oof_auc = []
+    for n_fold, (trn_idx, val_idx) in enumerate(folds_.split(x_train, y_train)):
+        trn_x, trn_y = x_train.iloc[trn_idx], y_train.iloc[trn_idx]
+        val_x, val_y = x_train.iloc[val_idx], y_train.iloc[val_idx]
         clf = lgb.LGBMClassifier(**algo_params)
-
         fit_params.update({"eval_set": [(trn_x, trn_y), (val_x, val_y)]})
         clf.fit(trn_x, trn_y, **fit_params)
-
         oof_best_iters.append(clf.best_iteration_)
         oof_preds[val_idx] = clf.predict_proba(val_x, num_iteration=clf.best_iteration_)[:, 1]
-        sub_preds += clf.predict_proba(
-            test_[feats],
-            num_iteration=clf.best_iteration_)[:, 1] / folds_.n_splits
+        oof_models.append(clf)
+        oof_auc.append(roc_auc_score(val_y, oof_preds[val_idx]))
+        print('Fold %2d AUC : %.6f' % 
+              (n_fold + 1, oof_auc[n_fold]))
+        del clf, trn_x, trn_y, val_x, val_y
+        gc.collect()
+
+    print('AUC score of oof prediction %.6f' % roc_auc_score(y_train, oof_preds))
+    print('AUC of cross validation %.6f' % np.mean(np.array(oof_auc)))
+
+    avg_best_iters = np.mean(oof_best_iters)
+    df_oof_preds = pd.DataFrame({'SK_ID_CURR': ids, 'TARGET': y_train, 'PREDICTION': oof_preds})
+    df_oof_preds = df_oof_preds[['SK_ID_CURR', 'TARGET', 'PREDICTION']]
+    #
+    folds_idx = [(trn_idx, val_idx) for trn_idx, val_idx in folds_.split(x_train, y_train)]
+    res = {
+        'folds_idx':folds_idx,
+        'score':roc_auc_score(y_train, oof_preds),
+        'oof_models': oof_models,
+        'df_oof_preds':df_oof_preds,
+        'oof_preds':oof_preds,
+        'avg_best_iters':avg_best_iters,
+        'algo_params':algo_params,
+        'fit_params':fit_params
+    }
+    return res
+
+
+def get_feature_importance_model_lgbm_v2(x_train, y_train, res_models, ids, folds_):
+    """
+    functionality: 
+    input:  the train set, folds, algo parameters and fit parameters as the input
+    output: k-fold feature importance
+    """
+    oof_preds = res_models['oof_preds']
+    feature_importance_df = pd.DataFrame()
+    #oof_best_iters = []
+    #feats = [f for f in data_.columns if f not in ['SK_ID_CURR']]
+    algo_params = res_models['algo_params']
+    fit_params = res_models['fit_params']
+
+    for n_fold, (trn_idx, val_idx) in enumerate(folds_.split(x_train, y_train)):
+        trn_x, trn_y = x_train.iloc[trn_idx], y_train.iloc[trn_idx]
+        val_x, val_y = x_train.iloc[val_idx], y_train.iloc[val_idx]
+        clf = res_models['oof_models'][n_fold]
+        fit_params.update({"eval_set": [(trn_x, trn_y), (val_x, val_y)]})
+        clf.fit(trn_x, trn_y, **fit_params)
+        #oof_best_iters.append(clf.best_iteration_)
+        #oof_preds[val_idx] = clf.predict_proba(val_x, num_iteration=clf.best_iteration_)[:, 1]
 
         fold_importance_df = pd.DataFrame()
-        fold_importance_df["feature"] = feats
+        fold_importance_df["feature"] = x_train.columns
         fold_importance_df["importance"] = clf.feature_importances_
         fold_importance_df["fold"] = n_fold + 1
         feature_importance_df = pd.concat([feature_importance_df, fold_importance_df], axis=0)
@@ -57,29 +103,123 @@ def train_model_lgbm(data_, test_, y_, ids, folds_, algo_params, fit_params):
         del clf, trn_x, trn_y, val_x, val_y
         gc.collect()
 
-    print('Full AUC score %.6f' % roc_auc_score(y_, oof_preds))
+    print('Full AUC score %.6f' % roc_auc_score(y_train, oof_preds))
 
-    test_['TARGET'] = sub_preds
-    avg_best_iters = np.mean(oof_best_iters)
-    df_oof_preds = pd.DataFrame({'SK_ID_CURR': ids, 'TARGET': y_, 'PREDICTION': oof_preds})
-    df_oof_preds = df_oof_preds[['SK_ID_CURR', 'TARGET', 'PREDICTION']]
-    #
-    folds_idx = [(trn_idx, val_idx) for trn_idx, val_idx in folds_.split(data_, y_)]
+    folds_idx = [(trn_idx, val_idx) for trn_idx, val_idx in folds_.split(x_train, y_train)]
     avg_feature_importance = get_feature_importances(feature_importance_df)
     res = {
-        'y':y_,
+#        'y':y_train,
         'folds_idx':folds_idx,
-        'score':roc_auc_score(y_, oof_preds),
-        'test_preds':test_[['SK_ID_CURR', 'TARGET']],
-        'df_oof_preds':df_oof_preds,
-        'oof_preds':oof_preds,
+        'score':roc_auc_score(y_train, oof_preds),
+   #     'test_preds':test_[['SK_ID_CURR', 'TARGET']],
+       # 'df_oof_preds':df_oof_preds,
+        #'oof_preds':oof_preds,
         'importances': feature_importance_df,
         'avg_feature_importance':avg_feature_importance,
-        'avg_best_iters':avg_best_iters,
+       ## 'avg_best_iters':avg_best_iters,
         'algo_params':algo_params,
         'fit_params':fit_params
     }
     return res
+
+def oof_prediction_test(data_, test_, y_, ids, folds_, res_models):
+    '''
+    funcationality: 
+    oof_prediction + predicatin on the test set.
+    '''
+    #oof_preds = np.zeros(data_.shape[0]) # train oof prediction
+    sub_preds = np.zeros(test_.shape[0]) # test prediction
+    oof_best_iters = []
+    feats = [f for f in data_.columns if f not in ['SK_ID_CURR']]
+    for n_fold, (trn_idx, val_idx) in enumerate(folds_.split(data_, y_)):
+        clf = res_models['oof_models'][n_fold]
+       # val_x, val_y = data_[feats].iloc[val_idx], y_.iloc[val_idx]
+        #oof_preds[val_idx] = clf.predict_proba(val_x, num_iteration=clf.best_iteration_)[:, 1]
+        sub_preds += clf.predict_proba(
+            test_[feats],
+            num_iteration=clf.best_iteration_)[:, 1] / folds_.n_splits
+        test_['TARGET'] = sub_preds
+        del clf
+        gc.collect()
+    test_['TARGET'] = sub_preds
+   # avg_best_iters = np.mean(oof_best_iters)
+    #df_oof_preds = pd.DataFrame({'SK_ID_CURR': ids, 'TARGET': y_, 'PREDICTION': oof_preds})
+    #df_oof_preds = df_oof_preds[['SK_ID_CURR', 'TARGET', 'PREDICTION']]
+    folds_idx = res_models['folds_idx']
+    res = {
+        'y':y_,
+        'folds_idx':folds_idx,
+        #'score':roc_auc_score(y_, oof_preds),
+        'test_preds':test_[['SK_ID_CURR', 'TARGET']],
+       # 'df_oof_preds':df_oof_preds,
+       # 'oof_preds':oof_preds,
+       # 'avg_best_iters':avg_best_iters
+    }
+    return res
+
+
+############################ lgbm, nn, lm models ############################
+
+def train_model_lgbm(data_, test_, y_, ids, folds_, algo_params, fit_params):
+    res_models = train_model_lgbm_v2(data_, y_, ids, folds_, algo_params, fit_params)
+    result = get_feature_importance_model_lgbm_v2(data_, y_, res_models, ids, folds_)
+    result.update(res_models)
+    oof_result = oof_prediction_test(data_, test_, y_, ids, folds_, res_models)
+    result.update(oof_result)
+   # oof_preds = np.zeros(data_.shape[0])
+   # sub_preds = np.zeros(test_.shape[0])
+   # feature_importance_df = pd.DataFrame()
+   # oof_best_iters = []
+   # feats = [f for f in data_.columns if f not in ['SK_ID_CURR']]
+
+   # for n_fold, (trn_idx, val_idx) in enumerate(folds_.split(data_, y_)):
+   #     trn_x, trn_y = data_[feats].iloc[trn_idx], y_.iloc[trn_idx]
+   #     val_x, val_y = data_[feats].iloc[val_idx], y_.iloc[val_idx]
+
+   #     clf = lgb.LGBMClassifier(**algo_params)
+
+   #     fit_params.update({"eval_set": [(trn_x, trn_y), (val_x, val_y)]})
+   #     clf.fit(trn_x, trn_y, **fit_params)
+
+   #     oof_best_iters.append(clf.best_iteration_)
+   #     oof_preds[val_idx] = clf.predict_proba(val_x, num_iteration=clf.best_iteration_)[:, 1]
+   #     sub_preds += clf.predict_proba(
+   #         test_[feats],
+   #         num_iteration=clf.best_iteration_)[:, 1] / folds_.n_splits
+
+   #     fold_importance_df = pd.DataFrame()
+   #     fold_importance_df["feature"] = feats
+   #     fold_importance_df["importance"] = clf.feature_importances_
+   #     fold_importance_df["fold"] = n_fold + 1
+   #     feature_importance_df = pd.concat([feature_importance_df, fold_importance_df], axis=0)
+   #     print('Fold %2d AUC : %.6f' %
+   #           (n_fold + 1, roc_auc_score(val_y, oof_preds[val_idx])))
+   #     del clf, trn_x, trn_y, val_x, val_y
+   #     gc.collect()
+
+   # print('Full AUC score %.6f' % roc_auc_score(y_, oof_preds))
+
+   # test_['TARGET'] = sub_preds
+   # avg_best_iters = np.mean(oof_best_iters)
+   # df_oof_preds = pd.DataFrame({'SK_ID_CURR': ids, 'TARGET': y_, 'PREDICTION': oof_preds})
+   # df_oof_preds = df_oof_preds[['SK_ID_CURR', 'TARGET', 'PREDICTION']]
+   # #
+   # folds_idx = [(trn_idx, val_idx) for trn_idx, val_idx in folds_.split(data_, y_)]
+   # avg_feature_importance = get_feature_importances(feature_importance_df)
+   # res = {
+   #     'y':y_,
+   #     'folds_idx':folds_idx,
+   #     'score':roc_auc_score(y_, oof_preds),
+   #     'test_preds':test_[['SK_ID_CURR', 'TARGET']],
+   #     'df_oof_preds':df_oof_preds,
+   #     'oof_preds':oof_preds,
+   #     'importances': feature_importance_df,
+   #     'avg_feature_importance':avg_feature_importance,
+   #     'avg_best_iters':avg_best_iters,
+   #     'algo_params':algo_params,
+   #     'fit_params':fit_params
+   # }
+    return result
 
 
 def train_model_logistic(data_, test_, y_, ids, folds_, algo_params, fit_params):
@@ -150,7 +290,7 @@ def train_model_neuralnetwork(data_, test_, y_, ids, folds_,algo_params, fit_par
             nn.add(BatchNormalization())
             nn.add(Dropout(algo_params['dropout']))
         nn.add(Dense(1, kernel_initializer=algo_params['kernel_initializer'], activation=algo_params['activation']))
-        #nn.compile(loss=algo_params['loss'], optimizer=algo_params['optimizer'])
+        nn.compile(loss=algo_params['loss'], optimizer=algo_params['optimizer'])
         nn.compile(loss=algo_params['loss'], optimizer=algo_params['optimizer'], metrics=algo_params['metric'])
 
         print('Fitting neural network...')
