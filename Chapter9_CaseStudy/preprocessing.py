@@ -140,7 +140,6 @@ def features_add_derivative(df_all, feature_groups):
         df['AMT_INCOME_TOTAL'].replace(1.170000e+08, np.nan, inplace=True)
         df['ANNUITY_CREDIT_PERC'] = df['AMT_ANNUITY'] / df['AMT_CREDIT']
         df['ANNUITY_INCOME_PERC'] = df['AMT_ANNUITY'] / df['AMT_INCOME_TOTAL']
-        ##df['ANNUITY_INCOME_PERC'] = df['AMT_ANNUITY'] / (1+df['AMT_INCOME_TOTAL'])
         df['GOODS_PRICE_CREDIT_PERC'] = df['AMT_GOODS_PRICE'] / df['AMT_CREDIT']
         df['DAYS_EMPLOYED'].replace(365243, np.nan, inplace=True)
         df['DAYS_CREDIT_PERC'] = df['DAYS_EMPLOYED'] / df['DAYS_BIRTH']
