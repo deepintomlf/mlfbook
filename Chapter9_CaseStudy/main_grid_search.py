@@ -34,7 +34,7 @@ x_train, x_test, y_train, ids = build_model_input(input_dir=input_dir)
 
 ## Step 2: Initialize the LGBM classifier and do cross validation for parameter tuning for the train set;
 
-def GridSearch(x_train, sel_feas, y_train, param_grid, algo_params = _default_algo_params_lgbm, cv = 5, num_boost_round=  2000,
+def do_grid_search(x_train, sel_feas, y_train, param_grid, algo_params = _default_algo_params_lgbm, cv = 5, num_boost_round=  2000,
 		                    early_stopping_rounds=100,
 		                    verbose_eval=1000,
 		                    seed = 5):
@@ -70,7 +70,7 @@ param_grid = {'max_depth': [5, 6],
               'num_leaves': [20, 31],
               }
 Param_grid = list(ParameterGrid(param_grid))
-best_params, grid_scores = GridSearch(x_train, sel_feas, y_train, Param_grid, cv = 5)
+best_params, grid_scores = do_grid_search(x_train, sel_feas, y_train, Param_grid, cv = 5)
 
 
 ## Step 3: Visualize the grid search results

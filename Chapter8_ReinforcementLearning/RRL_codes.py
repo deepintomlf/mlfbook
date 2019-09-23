@@ -23,7 +23,7 @@ def split_func2(x):
     return split2
     
 # define the customized loss function - negative Sharpe ratio of the output layer 
-def TradingReturn(x, delta):
+def trading_return(x, delta):
     F_t_Layer, r_tplus1_Layer = tf.split(x, [1, 1], -1)
     p = x._keras_shape
     F_tminus1_layer1, f1 = tf.split(F_t_Layer, [p[-2]-1, 1], -2)
@@ -34,7 +34,7 @@ def TradingReturn(x, delta):
     output_layer  =  Multiply()([F_t_Layer, r_tplus1_Layer]) -transaction_part
     return output_layer
   
-def SharpeRatioLoss(yTrue,yPred):
+def sharpe_ratio_loss(yTrue,yPred):
   y_shape = K.shape(yPred)
   B = K.mean(K.square(yPred))
   A = K.mean(yPred)
@@ -53,9 +53,9 @@ def RRL_Model(input_dim, delta):
   # Step 3: Concatenate F_t_Layer with r_tplus1_Layer
   hidden_layer =  Concatenate()([F_t_Layer, r_tplus1_Layer])
   # Map hidden layer to output layer, which represents the trading return series
-  output_layer  = Lambda(TradingReturn, arguments={'delta':delta})(hidden_layer )
+  output_layer  = Lambda(trading_return, arguments={'delta':delta})(hidden_layer )
   model = Model(inputs=input_layer, outputs=output_layer)
 
   sgd = optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-  model.compile(loss=SharpeRatioLoss, optimizer=sgd)  
+  model.compile(loss=sharpe_ratio_loss, optimizer=sgd)
   return model
