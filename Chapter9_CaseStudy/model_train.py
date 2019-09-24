@@ -145,59 +145,6 @@ def train_model_lgbm(data_, test_, y_, ids, folds_, algo_params, fit_params):
     result.update(res_models)
     oof_result = oof_prediction_test(data_, test_, y_, ids, folds_, res_models)
     result.update(oof_result)
-   # oof_preds = np.zeros(data_.shape[0])
-   # sub_preds = np.zeros(test_.shape[0])
-   # feature_importance_df = pd.DataFrame()
-   # oof_best_iters = []
-   # feats = [f for f in data_.columns if f not in ['SK_ID_CURR']]
-
-   # for n_fold, (trn_idx, val_idx) in enumerate(folds_.split(data_, y_)):
-   #     trn_x, trn_y = data_[feats].iloc[trn_idx], y_.iloc[trn_idx]
-   #     val_x, val_y = data_[feats].iloc[val_idx], y_.iloc[val_idx]
-
-   #     clf = lgb.LGBMClassifier(**algo_params)
-
-   #     fit_params.update({"eval_set": [(trn_x, trn_y), (val_x, val_y)]})
-   #     clf.fit(trn_x, trn_y, **fit_params)
-
-   #     oof_best_iters.append(clf.best_iteration_)
-   #     oof_preds[val_idx] = clf.predict_proba(val_x, num_iteration=clf.best_iteration_)[:, 1]
-   #     sub_preds += clf.predict_proba(
-   #         test_[feats],
-   #         num_iteration=clf.best_iteration_)[:, 1] / folds_.n_splits
-
-   #     fold_importance_df = pd.DataFrame()
-   #     fold_importance_df["feature"] = feats
-   #     fold_importance_df["importance"] = clf.feature_importances_
-   #     fold_importance_df["fold"] = n_fold + 1
-   #     feature_importance_df = pd.concat([feature_importance_df, fold_importance_df], axis=0)
-   #     print('Fold %2d AUC : %.6f' %
-   #           (n_fold + 1, roc_auc_score(val_y, oof_preds[val_idx])))
-   #     del clf, trn_x, trn_y, val_x, val_y
-   #     gc.collect()
-
-   # print('Full AUC score %.6f' % roc_auc_score(y_, oof_preds))
-
-   # test_['TARGET'] = sub_preds
-   # avg_best_iters = np.mean(oof_best_iters)
-   # df_oof_preds = pd.DataFrame({'SK_ID_CURR': ids, 'TARGET': y_, 'PREDICTION': oof_preds})
-   # df_oof_preds = df_oof_preds[['SK_ID_CURR', 'TARGET', 'PREDICTION']]
-   # #
-   # folds_idx = [(trn_idx, val_idx) for trn_idx, val_idx in folds_.split(data_, y_)]
-   # avg_feature_importance = get_feature_importances(feature_importance_df)
-   # res = {
-   #     'y':y_,
-   #     'folds_idx':folds_idx,
-   #     'score':roc_auc_score(y_, oof_preds),
-   #     'test_preds':test_[['SK_ID_CURR', 'TARGET']],
-   #     'df_oof_preds':df_oof_preds,
-   #     'oof_preds':oof_preds,
-   #     'importances': feature_importance_df,
-   #     'avg_feature_importance':avg_feature_importance,
-   #     'avg_best_iters':avg_best_iters,
-   #     'algo_params':algo_params,
-   #     'fit_params':fit_params
-   # }
     return result
 
 
