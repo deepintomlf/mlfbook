@@ -1,4 +1,3 @@
-from google.colab import drive
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
@@ -11,13 +10,18 @@ import lightgbm as lgb
 from datetime import datetime
 import os
 
-drive.mount('/content/drive', force_remount=True)
-input_dir = "/content/drive/My Drive/Programming/Python/kaggle/home_credit/data/"
-output_dir = "/content/drive/My Drive/Programming/Python/kaggle/home_credit/output/"
-python_path = '/content/drive/My Drive/Programming/Python/mlfbook/mlfbook/CaseStudy/'
-if python_path not in os.sys.path:
-    os.sys.path.append(python_path)
+#### supress some harmless warnings
+import sys
+import warnings
+if not sys.warnoptions:
+    warnings.simplefilter("ignore")
+####
+cur_dir = os.getcwd()
+input_dir = cur_dir+"\\input\\"
+output_dir = cur_dir+"\\output\\"
+print(os.getcwd())
 
+if os.path.isdir(output_dir)==False: os.mkdir(output_dir)
 from preprocessing import *
 from model_helper import *
 from model_train import *
@@ -149,7 +153,7 @@ folds = StratifiedKFold(**_default_skfold_params )
 
 # train model
 train_model = model_lgbm['model']
-res_models = train_model(x_train, y_train, folds, train_model['algo_params'], train_model['fit_params'])
+res_models = train_model(x_train, y_train, folds, model_lgbm['algo_params'], model_lgbm['fit_params'])
 #
 prediction_result = oof_prediction_test(x_train, x_test, y_train, ids, folds,res_models)
 feature_importance_df  = feature_importance_oof(x_train, x_test, y_train, ids, folds, res_models)
