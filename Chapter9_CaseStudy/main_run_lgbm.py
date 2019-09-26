@@ -158,5 +158,6 @@ res_models = train_model(x_train, y_train, folds, model_lgbm['algo_params'], mod
 prediction_result = oof_prediction_test(x_train, x_test, y_train, ids, folds,res_models)
 feature_importance_df  = feature_importance_oof(x_train, x_test, y_train, ids, folds, res_models)
 
-save_training_prediction_result(prediction_result, model_type= 'lgbm')
-figs = save_feature_importance(feature_importance_df , prediction_result, model_type= 'lgbm')
+save_dir = output_dir+'model_lgbm'
+save_training_prediction_result(prediction_result, model_type='lgbm',save_dir=save_dir)
+figs = save_feature_importance(feature_importance_df , prediction_result, model_type= 'lgbm', save_dir=save_dir)

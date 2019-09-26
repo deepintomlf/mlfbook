@@ -29,15 +29,19 @@ def display_importances(feature_importance_df_,model_type='LightGBM',save_dir=No
         feature_importance_df_.feature.isin(cols)]
 
     fig = plt.figure(figsize=(8, 10))
+    #sns.palplot(sns.color_palette("Paired"))
     sns.barplot(
-        x="importance",
         y="feature",
-        data=best_features.sort_values(by="importance", ascending=False))
+        x="importance",
+        data=best_features.sort_values(by="importance", ascending=False), palette="Paired")
+
     plt.title('{} Features (avg over folds)'.format(model_type))
     plt.tight_layout()
-    plt.savefig('feature_importances_' + str(datetime.now().strftime('%Y%m%d%H%M')) + '.png')
-    if save_dir:
+
+    if save_dir is not None:
         save_figure(fig,save_dir,'feature_importances')
+    else:
+        plt.savefig('feature_importances_' + str(datetime.now().strftime('%Y%m%d%H%M')) + '.png')
     return fig
 
 
