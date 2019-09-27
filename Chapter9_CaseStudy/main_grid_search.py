@@ -23,16 +23,16 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
 ####
 
-## Step 1: Import data 
-#### Set the directory
+# Step 1: Import data
+# Set the directory
 cur_dir = os.getcwd()
 input_dir = cur_dir + "//input//"
 output_dir = cur_dir + "//output//"
-save_dir = cur_dir +"//output//"
+
 x_train, x_test, y_train, ids = build_model_input(input_dir=input_dir)
 
 
-## Step 2: Initialize the LGBM classifier and do cross validation for parameter tuning for the train set;
+# Step 2: Initialize the LGBM classifier and do cross validation for parameter tuning for the train set;
 
 def do_grid_search(x_train, sel_feas, y_train, param_grid, algo_params = _default_algo_params_lgbm, cv = 5, num_boost_round=  2000,
 		                    early_stopping_rounds=100,
@@ -73,7 +73,7 @@ Param_grid = list(ParameterGrid(param_grid))
 best_params, grid_scores = do_grid_search(x_train, sel_feas, y_train, Param_grid, cv = 5)
 
 
-## Step 3: Visualize the grid search results
+# Step 3: Visualize the grid search results
 print('---start output grid search results')
  
 for cvres in grid_scores:
