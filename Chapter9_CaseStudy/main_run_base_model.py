@@ -13,14 +13,10 @@ from preprocessing import *
 from model_helper import *
 from model_train import *
 
-
-print(os.getcwd())
 cur_dir = os.getcwd()
 input_dir = cur_dir + "//input//"
 output_dir = cur_dir + "//output//"
 if os.path.isdir(output_dir)==False: os.mkdir(output_dir)
-
-#save_dir = cur_dir +"//output//"
 
 #-----------------------------------------#
 def run_model(model_type,model_map,input_dir, output_dir):
