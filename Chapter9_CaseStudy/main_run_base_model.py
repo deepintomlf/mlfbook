@@ -18,12 +18,14 @@ print(os.getcwd())
 cur_dir = os.getcwd()
 input_dir = cur_dir + "//input//"
 output_dir = cur_dir + "//output//"
-save_dir = cur_dir +"//output//"
+if os.path.isdir(output_dir)==False: os.mkdir(output_dir)
+
+#save_dir = cur_dir +"//output//"
 
 #-----------------------------------------#
 def run_model(model_type,model_map,input_dir, output_dir):
     save_dir = '{}/model_{}'.format(output_dir,model_type)
-    print('------- run model: {} '.format(model_type,save_dir))
+    print('------- run model: {} '.format(model_type))
     if model_type.lower() in ['lgbm']:
       x_train, x_test, y_train, ids = build_model_input(input_dir=input_dir)
     else:
@@ -31,22 +33,22 @@ def run_model(model_type,model_map,input_dir, output_dir):
     # get train results
     res = train_results(x_train, x_test, y_train, ids, model_map[model_type])
 
-    if len(glob(save_dir))==0:
+    if os.path.isdir(save_dir)==False:
       os.mkdir(save_dir)
-    print('-------- save results to:{}'.format(model_type,save_dir))
-    save_training_results(res,model_type=model_type,save_dir=save_dir)
+    print('-------- save results to {f}:{m}'.format(m=model_type, f=save_dir))
+    save_training_results(res,model_type=model_type, save_dir=save_dir)
 
 #------------------------------#
 model_map = {
     'logistic': _default_model_logistic,
-    'neuralnetwork':_default_model_neuralnetwork,
-    'lgbm':_default_model_lgbm}
+    'neuralnetwork': _default_model_neuralnetwork,
+    'lgbm': _default_model_lgbm}
 
-figs = run_model('lgbm',model_map,input_dir,output_dir)
+run_model('lgbm', model_map, input_dir, output_dir)
 
-figs = run_model('logistic',model_map,input_dir,output_dir)
+run_model('logistic', model_map, input_dir, output_dir)
 
-figs = run_model('neuralnetwork', model_map,input_dir,output_dir)
+run_model('neuralnetwork', model_map, input_dir, output_dir)
 
 
 
