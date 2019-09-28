@@ -29,7 +29,6 @@ def display_importances(feature_importance_df_,model_type='LightGBM',save_dir=No
         feature_importance_df_.feature.isin(cols)]
 
     fig = plt.figure(figsize=(8, 10))
-    #sns.palplot(sns.color_palette("Paired"))
     sns.barplot(
         y="feature",
         x="importance",
@@ -47,6 +46,8 @@ def display_importances(feature_importance_df_,model_type='LightGBM',save_dir=No
 
 def display_roc_curve(y_, oof_preds_, folds_idx_,model_type,save_dir=None):
     # Plot ROC curves
+    sns.set_style("white")
+    #sns.palplot(sns.color_palette("hls", 8))
     fig = plt.figure(figsize=(6, 6))
     scores = []
     for n_fold, (_, val_idx) in enumerate(folds_idx_):
@@ -58,7 +59,7 @@ def display_roc_curve(y_, oof_preds_, folds_idx_,model_type,save_dir=None):
             fpr,
             tpr,
             lw=1,
-            alpha=0.3,
+            alpha=0.8,
             label='ROC fold %d (AUC = %0.4f)' % (n_fold + 1, score))
 
     plt.plot(
@@ -67,7 +68,7 @@ def display_roc_curve(y_, oof_preds_, folds_idx_,model_type,save_dir=None):
         lw=2,
         color='r',
         label='Luck',
-        alpha=.8)
+        alpha=.9)
     fpr, tpr, thresholds = roc_curve(y_, oof_preds_)
     score = roc_auc_score(y_, oof_preds_)
     plt.plot(
@@ -76,13 +77,13 @@ def display_roc_curve(y_, oof_preds_, folds_idx_,model_type,save_dir=None):
         color='b',
         label='Avg ROC (AUC = %0.4f $\pm$ %0.4f)' % (score, np.std(scores)),
         lw=2,
-        alpha=.8)
+        alpha=.9)
 
     plt.xlim([-0.05, 1.05])
     plt.ylim([-0.05, 1.05])
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('{} ROC Curve'.format(model_type))
+    plt.xlabel('False Positive Rate', fontsize=15)
+    plt.ylabel('True Positive Rate', fontsize=15)
+    plt.title('{} ROC Curve'.format(model_type), fontsize=18)
     plt.legend(loc="lower right")
     plt.tight_layout()
     if save_dir:
@@ -93,22 +94,25 @@ def display_roc_curve(y_, oof_preds_, folds_idx_,model_type,save_dir=None):
 def display_precision_recall(y_, oof_preds_, folds_idx_, model_type='',save_dir=None):
     # Plot ROC curves
     fig = plt.figure(figsize=(6, 6))
-
+    sns.set_style("white")
+    sns.color_palette("hls", 8)
     scores = []
     for n_fold, (_, val_idx) in enumerate(folds_idx_):
-        # Plot the roc curve
-        fpr, tpr, thresholds = roc_curve(y_.iloc[val_idx], oof_preds_[val_idx])
+        # Plot the PR curve
+       # fpr, tpr, thresholds = roc_curve(y_.iloc[val_idx], oof_preds_[val_idx])
+        precision, recall, thresholds = precision_recall_curve(y_.iloc[val_idx], oof_preds_[val_idx])
         score = average_precision_score(y_.iloc[val_idx], oof_preds_[val_idx])
         scores.append(score)
         plt.plot(
-            fpr,
-            tpr,
+            precision,
+            recall,
             lw=1,
-            alpha=0.3,
+            alpha=0.7,
             label='AP fold %d (AUC = %0.4f)' % (n_fold + 1, score))
 
     precision, recall, thresholds = precision_recall_curve(y_, oof_preds_)
     score = average_precision_score(y_, oof_preds_)
+
     plt.plot(
         precision,
         recall,
@@ -119,9 +123,9 @@ def display_precision_recall(y_, oof_preds_, folds_idx_, model_type='',save_dir=
 
     plt.xlim([-0.05, 1.05])
     plt.ylim([-0.05, 1.05])
-    plt.xlabel('Recall')
-    plt.ylabel('Precision')
-    plt.title('{} Recall / Precision'.format(model_type))
+    plt.xlabel('Recall', fontsize=15)
+    plt.ylabel('Precision', fontsize=15)
+    plt.title('{} Recall / Precision'.format(model_type), fontsize=18)
     plt.legend(loc="best")
     plt.tight_layout()
     if save_dir:
