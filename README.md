@@ -1,3 +1,3 @@
 # mlfbook
 
-It contains all the python code for the book "An Introduction to Machine Learning in Quantitative Finance".
+It contains all the python codes for the book "An Introduction to Machine Learning in Quantitative Finance".
