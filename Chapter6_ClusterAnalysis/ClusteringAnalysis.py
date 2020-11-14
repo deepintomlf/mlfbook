@@ -25,10 +25,11 @@ class ClusteringAnalysis(object):
         true_labels = data.loc[:, true_label_name] if true_label_name in data.columns else []
         return X, true_labels
 
-    def model_kmeans(self, data, n_clusters=3, init_method='k-means++', n_init=10):
+    def model_kmeans(self, data, n_clusters=3, init_method='k-means++', n_init=10, max_iter=300):
         model = KMeans(n_clusters=n_clusters,
                        init=init_method,
-                       n_init=n_init)
+                       n_init=n_init,
+                       max_iter = max_iter)
         model.fit(data)
         cluster_labels = model.predict(data)
         cluster_centers = model.cluster_centers_
@@ -83,7 +84,7 @@ class ClusteringAnalysis(object):
             fig, axes = plt.subplots(ncols=ncols, nrows=nrows, figsize=(ncols * h_col, nrows * h_row))
             for (niter, ax) in zip(niters, axes.flatten()):
                 # ------------- fit X with Kmeans => cluster labels and cluster centers -------- #
-                kmeans = self.model_kmeans(data=X, n_clusters=n_clusters, rs=0, n_init=1, max_iter=niter)
+                kmeans = self.model_kmeans(data=X, n_clusters=n_clusters, n_init=1, max_iter=niter)
                 cluster_labels = kmeans['cluster_labels']
                 cluster_centers = kmeans['cluster_centers']
                 mode_fitted = kmeans['model']
@@ -114,7 +115,7 @@ class ClusteringAnalysis(object):
             fig, axes = plt.subplots(ncols=ncols, nrows=nrows, figsize=(ncols * h_col, nrows * h_row))
             for (param, ax) in zip(params, axes.flatten()):
                 # ------------- fit X with Kmeans => cluster labels and cluster centers -------- #
-                kmeans = self.model_kmeans(data=X, n_clusters=param, rs=0, n_init=1)
+                kmeans = self.model_kmeans(data=X, n_clusters=param,n_init=1)
                 cluster_labels = kmeans['cluster_labels']
                 cluster_centers = kmeans['cluster_centers']
                 mode_fitted = kmeans['model']
@@ -186,5 +187,3 @@ class ClusteringAnalysis(object):
         ax_cluster.set_ylabel("2nd feature space: {}".format(X.columns[1]))
         fig.tight_layout()
         return fig
-
-
