@@ -1,6 +1,6 @@
-# mlfbook
+# An Introduction to Machine Learning in Quantitative Finance
 
-It contains all the python codes for the book "An Introduction to Machine Learning in Quantitative Finance".
+This repository contains all the python codes for the book entitled "An Introduction to Machine Learning in Quantitative Finance".
 
 * Chapter 2: Supervised learning
 * Chapter 3: Linear regression and Regularization
