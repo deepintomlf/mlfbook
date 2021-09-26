@@ -16,6 +16,7 @@ The link to the book of Chinease version is http://www.tup.com.cn/booksCenter/bo
 
 ## Citation
 If you find our book useful, please consider citing our book. 
+
 **English version**:
 ```
 Ni, H., Dong, X., Zheng, J. and Yu, G., 2021. An Introduction to Machine Learning in Quantitative Finance. World Scientific.
