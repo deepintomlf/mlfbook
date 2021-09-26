@@ -15,9 +15,11 @@ The link to the book of English version is https://www.worldscientific.com/world
 The link to the book of Chinease version is http://www.tup.com.cn/booksCenter/book_08325301.html. [京东](https://item.jd.com/10026061863315.html)
 
 ## Citation
-*English version*:
+If you find our book useful, please consider citing our book. 
+**English version**:
+```
 Ni, H., Dong, X., Zheng, J. and Yu, G., 2021. An Introduction to Machine Learning in Quantitative Finance. World Scientific.
-
+```
 ```
 @book{ni2021introduction,
   title={An Introduction to Machine Learning in Quantitative Finance},
@@ -26,3 +28,13 @@ Ni, H., Dong, X., Zheng, J. and Yu, G., 2021. An Introduction to Machine Learnin
   publisher={World Scientific}
 }`
 ```
+**Chinese version**:
+```
+倪好, 董欣, 郑劲松, 和 于光希 (2021). 机器学习在量化金融中的应用. 清华大学出版社.
+```
+@book{ni2021introduction,
+  title={机器学习在量化金融中的应用},
+  author={Ni, Hao and Dong, Xin and Zheng, Jinsong and Yu, Guangxi},
+  year={2021},
+  publisher={Tsinghua University Press}
+}`
