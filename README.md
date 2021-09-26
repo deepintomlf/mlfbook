@@ -32,9 +32,11 @@ Ni, H., Dong, X., Zheng, J. and Yu, G., 2021. An Introduction to Machine Learnin
 ```
 倪好, 董欣, 郑劲松, 和 于光希 (2021). 机器学习在量化金融中的应用. 清华大学出版社.
 ```
+```
 @book{ni2021introduction,
   title={机器学习在量化金融中的应用},
   author={Ni, Hao and Dong, Xin and Zheng, Jinsong and Yu, Guangxi},
   year={2021},
   publisher={Tsinghua University Press}
 }`
+```
